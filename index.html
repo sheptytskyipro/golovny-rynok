@@ -217,45 +217,71 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--goldbg);font-f
 .photo-upload{width:100%;height:80px;border-radius:14px;border:1.5px dashed rgba(232,130,10,0.4);background:rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:var(--muted);font-size:12px;margin-top:6px}
 .submit-btn{width:100%;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff;border:none;border-radius:16px;padding:14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px;font-family:inherit}
 
-.bottom-nav{display:flex;justify-content:space-around;align-items:flex-end;padding:8px 0 calc(14px + var(--sab));border-top:0.5px solid rgba(245,166,35,0.3);background:rgba(253,243,227,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);flex-shrink:0}
+.bottom-nav{display:flex;justify-content:space-around;align-items:flex-end;padding:8px 4px calc(14px + var(--sab));border-top:0.5px solid rgba(245,166,35,0.28);background:rgba(253,243,227,0.82);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);flex-shrink:0;box-shadow:0 -2px 20px rgba(232,130,10,0.06);position:relative;z-index:10}
 .bnav{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--muted);font-size:9px;min-width:48px}
 .bnav.active{color:var(--gold)}
 .bnav i{font-size:22px}
 .bnav-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);margin-top:1px}
 .bnav-glass{
-  width:38px;height:38px;border-radius:13px;
+  width:42px;height:42px;border-radius:14px;
   display:flex;align-items:center;justify-content:center;
-  background:rgba(255,255,255,0.45);
-  border:0.5px solid rgba(245,166,35,0.22);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  transition:background .15s,border .15s;
+  background:rgba(255,255,255,0.48);
+  border:0.5px solid rgba(245,166,35,0.2);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  transition:all .18s;
+  box-shadow:
+    0 1px 8px rgba(232,130,10,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.75),
+    inset 0 0 0 0.5px rgba(255,255,255,0.2);
 }
 .bnav.active .bnav-glass{
   background:rgba(245,166,35,0.18);
   border:1px solid rgba(245,166,35,0.55);
-  box-shadow:0 2px 10px rgba(232,130,10,0.15);
+  box-shadow:
+    0 3px 14px rgba(232,130,10,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.65);
 }
-.bnav .bnav-glass i{font-size:18px;color:var(--muted)}
+.bnav .bnav-glass i{font-size:21px;color:rgba(184,132,42,0.65);transition:color .15s}
 .bnav.active .bnav-glass i{color:var(--gold)}
+.bnav:active .bnav-glass{transform:scale(0.86)}
 
 .bnav-center{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:9px;min-width:56px}
-.bnav-center-icon{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--gold2),var(--gold));display:flex;align-items:center;justify-content:center;margin-top:-20px;border:3px solid var(--goldbg);box-shadow:0 4px 12px rgba(232,130,10,0.35)}
-.bnav-center-icon .apple{font-size:22px}
-.bnav-center.active span{color:var(--gold);font-weight:600}
-.bnav-center span{color:var(--muted)}
+.bnav-center-icon{
+  width:50px;height:50px;border-radius:50%;
+  background:linear-gradient(145deg,rgba(250,180,60,0.96),rgba(230,120,5,0.96));
+  display:flex;align-items:center;justify-content:center;
+  margin-top:-22px;
+  border:3px solid rgba(253,243,227,0.92);
+  box-shadow:
+    0 5px 24px rgba(232,130,10,0.42),
+    0 0 0 1px rgba(245,166,35,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.45);
+  position:relative;transition:transform .15s,box-shadow .15s;
+}
+.bnav-center-icon::before{
+  content:'';position:absolute;top:6px;left:8px;
+  width:18px;height:9px;
+  background:rgba(255,255,255,0.28);border-radius:50%;transform:rotate(-22deg);
+}
+.bnav-center:active .bnav-center-icon{transform:scale(0.87)}
+.bnav-center-icon i{font-size:24px;color:#fff}
+.bnav-center.active span{color:var(--gold);font-weight:700}
+.bnav-center spanolor:var(--muted)}
 
 .success-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;background:var(--goldbg)}
 
 .bnav-nll{
   background:rgba(10,22,40,0.08) !important;
-  border:0.5px solid rgba(10,22,40,0.15) !important;
+  border:0.5px solid rgba(10,22,40,0.14) !important;
+  box-shadow:0 1px 8px rgba(10,22,40,0.06),inset 0 1px 0 rgba(255,255,255,0.35) !important;
 }
 .bnav.active .bnav-nll{
   background:rgba(10,22,40,0.18) !important;
-  border:1px solid rgba(255,200,50,0.5) !important;
-  box-shadow:0 2px 10px rgba(255,200,50,0.15) !important;
+  border:1px solid rgba(255,200,50,0.52) !important;
+  box-shadow:0 3px 14px rgba(255,149,0,0.16),inset 0 1px 0 rgba(255,255,255,0.2) !important;
 }
-.bnav .bnav-nll span{color:#5A3A10}
+.bnav .bnav-nll span{font-size:12px;font-weight:700;color:rgba(90,60,10,0.65);letter-spacing:-0.5px}
 .bnav.active .bnav-nll span{color:#FFC832 !important}
 
 /* Enhanced glass cards */
@@ -296,6 +322,165 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--goldbg);font-f
 .bnav:active,.bnav-center:active{
   transform:scale(0.92);
   transition:transform .1s;
+}
+
+
+/* ══ REDESIGNED GLASS NAVIGATION ICONS ══════════════════════════════════ */
+
+/* Remove old bnav-glass and replace with nav-ic system */
+.bnav-wrap{
+  display:flex;justify-content:space-around;align-items:flex-end;
+  padding:8px 4px calc(14px + env(safe-area-inset-bottom,0px));
+  background:rgba(253,243,227,0.82);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-top:0.5px solid rgba(245,166,35,0.28);flex-shrink:0;
+  box-shadow:0 -2px 16px rgba(232,130,10,0.06);
+  position:relative;z-index:10;
+}
+
+/* ── Individual nav item ── */
+.bnav-item{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;color:var(--muted);font-size:9px;font-weight:500;
+  min-width:48px;transition:color .15s;
+}
+.bnav-item.on{color:var(--gold)}
+.bnav-item .ni{
+  width:42px;height:42px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.45);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:0.5px solid rgba(245,166,35,0.2);
+  box-shadow:
+    0 1px 8px rgba(232,130,10,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.7),
+    inset 0 0 0 0.5px rgba(255,255,255,0.15);
+  transition:all .18s;
+}
+.bnav-item.on .ni{
+  background:rgba(245,166,35,0.18);
+  border:1px solid rgba(245,166,35,0.52);
+  box-shadow:
+    0 2px 14px rgba(232,130,10,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.bnav-item .ni i{font-size:21px;color:rgba(184,132,42,0.7);transition:color .15s}
+.bnav-item.on .ni i{color:var(--gold)}
+.bnav-item:active .ni{transform:scale(0.86)}
+.bnav-dot2{width:4px;height:4px;border-radius:50%;background:var(--gold);margin-top:1px}
+
+/* ── NLL glass nav icon ── */
+.bnav-item .ni.nll{
+  background:rgba(10,22,40,0.07);
+  border:0.5px solid rgba(10,22,40,0.14);
+  box-shadow:
+    0 1px 8px rgba(10,22,40,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.bnav-item.on .ni.nll{
+  background:rgba(10,22,40,0.16);
+  border:1px solid rgba(255,200,50,0.48);
+  box-shadow:0 2px 14px rgba(255,149,0,0.16);
+}
+.bnav-item .ni.nll span{
+  font-size:12px;font-weight:700;color:rgba(90,60,10,0.7);letter-spacing:-0.5px
+}
+.bnav-item.on .ni.nll span{color:#FFC832}
+
+/* ── Center apple button ── */
+.apple-center{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;font-size:9px;font-weight:700;color:var(--gold);
+  min-width:56px;
+}
+.apple-btn{
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(145deg,rgba(250,180,60,0.95),rgba(230,120,5,0.95));
+  display:flex;align-items:center;justify-content:center;
+  margin-top:-24px;
+  border:3px solid rgba(253,243,227,0.9);
+  box-shadow:
+    0 5px 22px rgba(232,130,10,0.42),
+    0 0 0 1px rgba(245,166,35,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.45);
+  position:relative;transition:transform .15s,box-shadow .15s;
+}
+.apple-btn::before{
+  content:'';position:absolute;top:6px;left:8px;
+  width:18px;height:9px;
+  background:rgba(255,255,255,0.3);
+  border-radius:50%;transform:rotate(-22deg);
+}
+.apple-btn:active{transform:scale(0.88);box-shadow:0 2px 12px rgba(232,130,10,0.3)}
+.apple-btn .ap{font-size:26px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.14))}
+
+/* ── ENHANCED GLASS CARDS ── */
+.tcard,.scard,.scard2,.goal-card,.feed-item,.hist-item,.mstat,.stat{
+  backdrop-filter:blur(16px) !important;
+  -webkit-backdrop-filter:blur(16px) !important;
+}
+
+/* ── SCREEN TRANSITION ── */
+@keyframes scr-in{
+  from{opacity:0;transform:translateX(16px)}
+  to{opacity:1;transform:translateX(0)}
+}
+.screen.active{animation:scr-in .26s cubic-bezier(.4,0,.2,1)}
+
+/* ── PULSE ON DONATE BTN ── */
+@keyframes dpulse{
+  0%,100%{box-shadow:0 5px 18px rgba(232,130,10,0.32)}
+  50%{box-shadow:0 5px 28px rgba(232,130,10,0.58),0 0 0 6px rgba(232,130,10,0.06)}
+}
+.dpulse{animation:dpulse 2.2s infinite}
+
+/* ── CARD PRESS EFFECT ── */
+.tcard:active,.scard:active,.scard2:active,.goal-card:active,.col-card:active,.nll-card:active{
+  transform:scale(0.96);transition:transform .1s;
+}
+
+
+/* ── Screen slide animation ── */
+@keyframes screenSlide{
+  from{opacity:0;transform:translateX(12px)}
+  to{opacity:1;transform:translateX(0)}
+}
+.screen.active{animation:screenSlide .24s cubic-bezier(.4,0,.2,1)}
+
+/* ── Donate button pulse ── */
+@keyframes dpulse{
+  0%,100%{box-shadow:0 4px 18px rgba(232,130,10,0.32)}
+  50%{box-shadow:0 4px 28px rgba(232,130,10,0.58),0 0 0 5px rgba(232,130,10,0.07)}
+}
+.dpulse{animation:dpulse 2.2s infinite !important}
+
+/* ── Hero shimmer ── */
+@keyframes shimmer{
+  0%{background-position:-200% 0}100%{background-position:200% 0}
+}
+.hero-fill::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.45),transparent);
+  background-size:200% 100%;animation:shimmer 2.2s infinite;
+}
+.hero-fill{position:relative;overflow:hidden}
+
+/* ── Enhanced bottom nav ── */
+.bottom-nav{position:relative;z-index:10}
+
+/* ── Card press states ── */
+.tcard:active,.scard:active,.scard2:active,.goal-card:active,.col-card:active,.nll-card:active,.hist-item:active{
+  transform:scale(0.96) !important;transition:transform .1s !important;
+}
+.bnav-center:active .bnav-center-icon,.bnav:active .bnav-glass{
+  transform:scale(0.86) !important;transition:transform .1s !important;
+}
+
+/* ── All cards get proper glass ── */
+.tcard,.scard,.scard2,.goal-card,.feed-item,.hist-item,.mstat,.stat,
+.item-author,.nll-info,.chart-wrap,.menu-list,.menu-item{
+  backdrop-filter:blur(18px) !important;
+  -webkit-backdrop-filter:blur(18px) !important;
 }
 
 </style>
@@ -395,7 +580,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--goldbg);font-f
       <div class="item-meta"><span class="item-city-t"><i class="ti ti-map-pin" style="font-size:11px"></i>Львів</span><span class="item-tag-t">Книги</span></div>
       <div class="item-desc">Набір з 5 книг у відмінному стані. Класика: Коцюбинський, Франко, Стефаник, Гессе, Камю. Самовивіз або Нова Пошта за рахунок отримувача.</div>
       <div class="item-author"><div class="author-av">ОМ</div><div style="flex:1"><div class="author-name">Олена Мельник</div><div class="author-stats">18 обмінів · учасник з 2024</div></div><i class="ti ti-message" style="font-size:18px;color:var(--gold);cursor:pointer"></i></div>
-      <div class="donate-block"><div class="donate-label">Мінімальний донат на ЗСУ</div><div class="donate-amount">₴ 150</div><button class="donate-btn" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
+      <div class="donate-block"><div class="donate-label">Мінімальний донат на ЗСУ</div><div class="donate-amount">₴ 150</div><button class="donate-btn dpulse" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
     </div>
   </div>
   <div class="bottom-nav">
@@ -418,7 +603,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--goldbg);font-f
       <div class="item-meta"><span class="item-city-t"><i class="ti ti-map-pin" style="font-size:11px"></i>Київ</span><span class="item-tag-t">Техніка</span></div>
       <div class="item-desc">Canon EOS 700D з об'єктивом 18-55mm. Пробіг 12 000 кадрів. Стан відмінний, є оригінальний чохол і зарядний пристрій.</div>
       <div class="item-author"><div class="author-av">ДК</div><div style="flex:1"><div class="author-name">Дмитро Ковальчук</div><div class="author-stats">7 обмінів · учасник з 2023</div></div><i class="ti ti-message" style="font-size:18px;color:var(--gold);cursor:pointer"></i></div>
-      <div class="donate-block"><div class="donate-label">Мінімальний донат на ЗСУ</div><div class="donate-amount">₴ 2 000</div><button class="donate-btn" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
+      <div class="donate-block"><div class="donate-label">Мінімальний донат на ЗСУ</div><div class="donate-amount">₴ 2 000</div><button class="donate-btn dpulse" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
     </div>
   </div>
   <div class="bottom-nav">
@@ -441,7 +626,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--goldbg);font-f
       <div class="item-meta"><span class="item-city-t"><i class="ti ti-map-pin" style="font-size:11px"></i>Харків</span><span class="item-tag-t">Одяг</span></div>
       <div class="item-desc">Тепла куртка Columbia на синтепоні, розмір M. Колір хакі. Носили один сезон, в ідеальному стані. Підходить для температур до -20°C.</div>
       <div class="item-author"><div class="author-av">НС</div><div style="flex:1"><div class="author-name">Наталія Сидоренко</div><div class="author-stats">12 обмінів · учасник з 2024</div></div><i class="ti ti-message" style="font-size:18px;color:var(--gold);cursor:pointer"></i></div>
-      <div class="donate-block"><div class="donate-label">Мінімальний донат на ЗСУ</div><div class="donate-amount">₴ 500</div><button class="donate-btn" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
+      <div class="donate-block"><div class="donate-label">Мінімальний донат на ЗСУ</div><div class="donate-amount">₴ 500</div><button class="donate-btn dpulse" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
     </div>
   </div>
   <div class="bottom-nav">
@@ -464,7 +649,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--goldbg);font-f
       <div class="item-meta"><span class="item-city-t"><i class="ti ti-map-pin" style="font-size:11px"></i>Одеса</span><span class="item-tag-t">Техніка</span></div>
       <div class="item-desc">Lenovo ThinkPad X1 Carbon, i5, 16GB RAM, 512GB SSD. Рік 2021. Повністю справний, акумулятор 6+ годин.</div>
       <div class="item-author"><div class="author-av">ВГ</div><div style="flex:1"><div class="author-name">Василь Гнатюк</div><div class="author-stats">3 обміни · учасник з 2025</div></div><i class="ti ti-message" style="font-size:18px;color:var(--gold);cursor:pointer"></i></div>
-      <div class="donate-block"><div class="donate-label">Мінімальний донат на ЗСУ</div><div class="donate-amount">₴ 5 000</div><button class="donate-btn" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
+      <div class="donate-block"><div class="donate-label">Мінімальний донат на ЗСУ</div><div class="donate-amount">₴ 5 000</div><button class="donate-btn dpulse" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
     </div>
   </div>
   <div class="bottom-nav">
@@ -487,7 +672,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--goldbg);font-f
       <div class="item-meta"><span class="item-city-t"><i class="ti ti-map-pin" style="font-size:11px"></i>Онлайн</span><span class="item-tag-t">Дизайн</span></div>
       <div class="item-desc">Векторний логотип для бізнесу, NGO або особистого бренду. AI, SVG, PNG. Два варіанти концепцій. Термін — 3–5 днів. Необмежені правки.</div>
       <div class="item-author"><div class="author-av">АМ</div><div style="flex:1"><div class="author-name">Андрій Максименко</div><div class="author-stats">28 послуг · дизайнер, 5 років</div></div><i class="ti ti-message" style="font-size:18px;color:var(--gold);cursor:pointer"></i></div>
-      <div class="donate-block"><div class="donate-label">Донат за послугу на ЗСУ</div><div class="donate-amount">від ₴ 300</div><button class="donate-btn" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
+      <div class="donate-block"><div class="donate-label">Донат за послугу на ЗСУ</div><div class="donate-amount">від ₴ 300</div><button class="donate-btn dpulse" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
     </div>
   </div>
   <div class="bottom-nav">
@@ -510,7 +695,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--goldbg);font-f
       <div class="item-meta"><span class="item-city-t"><i class="ti ti-map-pin" style="font-size:11px"></i>Онлайн</span><span class="item-tag-t">Навчання</span></div>
       <div class="item-desc">Індивідуальний урок. Рівні A1–C1. Розмовна практика, граматика або підготовка до IELTS/TOEFL. Перший урок — безкоштовно.</div>
       <div class="item-author"><div class="author-av">ОК</div><div style="flex:1"><div class="author-name">Оксана Кравченко</div><div class="author-stats">52 уроки · IELTS 7.5</div></div><i class="ti ti-message" style="font-size:18px;color:var(--gold);cursor:pointer"></i></div>
-      <div class="donate-block"><div class="donate-label">Донат за послугу на ЗСУ</div><div class="donate-amount">від ₴ 200</div><button class="donate-btn" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
+      <div class="donate-block"><div class="donate-label">Донат за послугу на ЗСУ</div><div class="donate-amount">від ₴ 200</div><button class="donate-btn dpulse" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
     </div>
   </div>
   <div class="bottom-nav">
@@ -533,7 +718,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--goldbg);font-f
       <div class="item-meta"><span class="item-city-t"><i class="ti ti-map-pin" style="font-size:11px"></i>Онлайн</span><span class="item-tag-t">Юридичні</span></div>
       <div class="item-desc">Цивільне право, документи, трудові спори, спадкування. Допомога з документами для ЗСУ та їх родин. 60 хвилин.</div>
       <div class="item-author"><div class="author-av">ВП</div><div style="flex:1"><div class="author-name">Вікторія Полякова</div><div class="author-stats">45 консультацій · адвокат 8 р.</div></div><i class="ti ti-message" style="font-size:18px;color:var(--gold);cursor:pointer"></i></div>
-      <div class="donate-block"><div class="donate-label">Донат за послугу на ЗСУ</div><div class="donate-amount">від ₴ 400</div><button class="donate-btn" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
+      <div class="donate-block"><div class="donate-label">Донат за послугу на ЗСУ</div><div class="donate-amount">від ₴ 400</div><button class="donate-btn dpulse" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
     </div>
   </div>
   <div class="bottom-nav">
@@ -556,7 +741,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--goldbg);font-f
       <div class="item-meta"><span class="item-city-t"><i class="ti ti-map-pin" style="font-size:11px"></i>Онлайн</span><span class="item-tag-t">IT</span></div>
       <div class="item-desc">WordPress, Tilda, Webflow. SEO, швидкість, мобільна адаптація. Термін — 2–7 днів.</div>
       <div class="item-author"><div class="author-av">ДС</div><div style="flex:1"><div class="author-name">Денис Степаненко</div><div class="author-stats">17 проєктів · fullstack 4 р.</div></div><i class="ti ti-message" style="font-size:18px;color:var(--gold);cursor:pointer"></i></div>
-      <div class="donate-block"><div class="donate-label">Донат за послугу на ЗСУ</div><div class="donate-amount">від ₴ 600</div><button class="donate-btn" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
+      <div class="donate-block"><div class="donate-label">Донат за послугу на ЗСУ</div><div class="donate-amount">від ₴ 600</div><button class="donate-btn dpulse" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
     </div>
   </div>
   <div class="bottom-nav">
@@ -579,7 +764,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--goldbg);font-f
       <div class="item-meta"><span class="item-city-t"><i class="ti ti-map-pin" style="font-size:11px"></i>Львів</span><span class="item-tag-t">Фото</span></div>
       <div class="item-desc">Портретна або предметна зйомка. 2 години, локація за вибором. 50+ оброблених фото JPEG та RAW.</div>
       <div class="item-author"><div class="author-av">МБ</div><div style="flex:1"><div class="author-name">Марта Бойко</div><div class="author-stats">63 зйомки · фотограф 6 р.</div></div><i class="ti ti-message" style="font-size:18px;color:var(--gold);cursor:pointer"></i></div>
-      <div class="donate-block"><div class="donate-label">Донат за послугу на ЗСУ</div><div class="donate-amount">від ₴ 800</div><button class="donate-btn" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
+      <div class="donate-block"><div class="donate-label">Донат за послугу на ЗСУ</div><div class="donate-amount">від ₴ 800</div><button class="donate-btn dpulse" onclick="go('s-success')">🍏 Задонатити через LiqPay</button></div>
     </div>
   </div>
   <div class="bottom-nav">
