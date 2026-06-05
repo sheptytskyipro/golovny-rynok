@@ -123,6 +123,7 @@ export interface Service {
 
 export interface Transaction {
   id: string;
+  userId: number;
   date: string;
   amount: number;
   direction: string;

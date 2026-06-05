@@ -2,11 +2,50 @@ import { useState } from 'react';
 import { Item, ItemCategory } from '../types';
 import GlassCard from '../components/GlassCard';
 import ItemCard from '../components/ItemCard';
-import LoadingSpinner from '../components/LoadingSpinner';
 import { useTelegram } from '../hooks/useTelegram';
-import { generateOrderId, openLiqPayForm } from '../utils/liqpay';
-import { searchCities, getBranches, mockCities, mockBranches } from '../utils/novaPoshta';
-import type { NovaPoshtaCity, NovaPoshta } from '../utils/novaPoshta';
+import { getItems, addItem, addTransaction, markItemSold, randomDirection } from '../store';
+
+const MOCK_CITIES = [
+  {
+    id: 'kyiv', name: 'Київ',
+    branches: [
+      'Відділення №1: вул. Хрещатик, 22',
+      'Відділення №3: пр. Перемоги, 15',
+      'Поштомат №12: ТРЦ Арена Сіті',
+    ],
+  },
+  {
+    id: 'lviv', name: 'Львів',
+    branches: [
+      'Відділення №2: вул. Городоцька, 189',
+      'Відділення №5: вул. Стрийська, 45',
+      'Поштомат №7: ТРЦ Форум Львів',
+    ],
+  },
+  {
+    id: 'kharkiv', name: 'Харків',
+    branches: [
+      'Відділення №1: пр. Науки, 14',
+      'Відділення №4: вул. Клочківська, 192',
+    ],
+  },
+  {
+    id: 'odesa', name: 'Одеса',
+    branches: [
+      'Відділення №2: вул. Рішельєвська, 33',
+      'Відділення №6: пр. Шевченка, 4',
+    ],
+  },
+  {
+    id: 'dnipro', name: 'Дніпро',
+    branches: [
+      'Відділення №3: вул. Робоча, 2а',
+      'Відділення №8: пр. Гагаріна, 72',
+    ],
+  },
+];
+
+const EMOJI_OPTIONS = ['📱', '💻', '🎒', '📚', '🔦', '🎸', '🏂', '👕', '🎨', '🧸', '🔧', '🪑', '🎮', '📷', '⌚', '🚲', '👟', '🎁', '🌿', '🏺'];
 
 const categories: { id: ItemCategory | 'all'; label: string; emoji: string }[] = [
   { id: 'all', label: 'Усі', emoji: '🌐' },
@@ -24,178 +63,132 @@ const categories: { id: ItemCategory | 'all'; label: string; emoji: string }[] =
   { id: 'книги', label: 'Книги', emoji: '📚' },
 ];
 
-const mockItems: Item[] = [
-  {
-    id: '1', sellerId: 1, sellerName: 'Олена К.', sellerCity: 'Київ',
-    title: 'Ноутбук Dell Latitude 5520, i5, 16GB RAM',
-    description: 'Відмінний стан, працює бездоганно. Купила новий, цей більше не потрібен.',
-    legend: 'Цей ноутбук пережив два переїзди і написання дисертації. Час йому допомагати далі — тепер у більш важливій справі.',
-    price: 18500, category: 'техніка', city: 'Київ', status: 'active',
-    images: [], createdAt: '2024-02-15',
-  },
-  {
-    id: '2', sellerId: 2, sellerName: 'Микола Д.', sellerCity: 'Львів',
-    title: 'Набір туристичного спорядження (рюкзак + намет)',
-    description: 'Рюкзак 65л + 2-місний намет. Використовувалось 3 рази, відмінний стан.',
-    legend: 'Купував для походів, які відклали через війну. Нехай це спорядження служить тим, хто захищає наші ліси.',
-    price: 4200, category: 'туризм', city: 'Львів', status: 'active',
-    images: [], createdAt: '2024-02-10',
-  },
-  {
-    id: '3', sellerId: 3, sellerName: 'Анна М.', sellerCity: 'Дніпро',
-    title: 'Дитячий велосипед Trek 20" (8-12 років)',
-    description: 'Синього кольору, гарний стан. Дитина виросла.',
-    legend: 'На ньому моя донька навчилась їздити на велосипеді. Тепер вона підросла, а велосипед ще може принести радість і допомогти ЗСУ.',
-    price: 2800, category: 'дитяче', city: 'Дніпро', status: 'active',
-    images: [], createdAt: '2024-02-08',
-  },
-  {
-    id: '4', sellerId: 4, sellerName: 'Ігор П.', sellerCity: 'Харків',
-    title: 'Дриль Bosch Professional + насадки (50 шт)',
-    description: 'Потужний дриль 800Вт, набір з 50 насадок. В ідеальному стані.',
-    price: 3600, category: 'інструменти', city: 'Харків', status: 'active',
-    images: [], createdAt: '2024-02-05',
-  },
-  {
-    id: '5', sellerId: 5, sellerName: 'Марія В.', sellerCity: 'Одеса',
-    title: 'Вінтажна швейна машина Singer (1965 р.)',
-    description: 'Повністю робоча, є голки та нитки. Справжній раритет.',
-    legend: 'Дісталась від бабусі. Вона шила на ній одяг для всієї родини. Тепер ця машина може допомогти у зовсім інший спосіб.',
-    price: 5500, category: 'вінтаж', city: 'Одеса', status: 'active',
-    images: [], createdAt: '2024-02-03',
-  },
-  {
-    id: '6', sellerId: 6, sellerName: 'Степан Б.', sellerCity: 'Запоріжжя',
-    title: 'Гірські лижі Rossignol + черевики (р. 42)',
-    description: 'Лижі 170 см + черевики 42 розмір. Сезон 2022, відмінний стан.',
-    price: 7200, category: 'спорядження', city: 'Запоріжжя', status: 'active',
-    images: [], createdAt: '2024-01-28',
-  },
-  {
-    id: '7', sellerId: 7, sellerName: 'Олексій Т.', sellerCity: 'Київ',
-    title: 'Колекція книг "Українська класика" (20 томів)',
-    description: 'Шевченко, Франко, Леся Українка та ін. Повне зібрання творів.',
-    price: 1800, category: 'книги', city: 'Київ', status: 'active',
-    images: [], createdAt: '2024-01-25',
-  },
-  {
-    id: '8', sellerId: 8, sellerName: 'Галина Р.', sellerCity: 'Львів',
-    title: 'Зимова куртка пухова Columbia (р. L, жіноча)',
-    description: 'Куртка-пуховик, колір темно-синій. Носили 1 сезон, відмінний стан.',
-    price: 2200, category: 'одяг', city: 'Львів', status: 'active',
-    images: [], createdAt: '2024-01-22',
-  },
-  {
-    id: '9', sellerId: 9, sellerName: 'Василь К.', sellerCity: 'Дніпро',
-    title: 'Хендмейд керамічний посуд (набір 6 предметів)',
-    description: 'Авторська робота, ручний розпис. Кружки та тарілки.',
-    legend: 'Кожен виріб — це години роботи та любов до нашої землі. Купуючи це, ви не просто підтримуєте ЗСУ — ви цінуєте українське мистецтво.',
-    price: 3200, category: 'хендмейд', city: 'Дніпро', status: 'active',
-    images: [], createdAt: '2024-01-20',
-  },
-  {
-    id: '10', sellerId: 10, sellerName: 'Тетяна П.', sellerCity: 'Харків',
-    title: 'Радіокерована модель літака (для дорослих)',
-    description: 'Масштаб 1:8, розмах крил 120 см. Повний комплект, акумулятори.',
-    price: 6800, category: 'хобі', city: 'Харків', status: 'sold',
-    images: [], createdAt: '2024-01-18',
-  },
-];
+type ViewMode = 'catalog' | 'detail' | 'sell' | 'delivery' | 'success';
+type SortMode = 'newer' | 'cheaper' | 'pricier';
 
-type ViewMode = 'catalog' | 'detail' | 'sell' | 'checkout' | 'delivery';
+interface SellForm {
+  title: string;
+  description: string;
+  legend: string;
+  price: string;
+  category: ItemCategory | '';
+  city: string;
+  imageEmoji: string;
+}
 
 export default function Items() {
-  const { haptic, hapticSuccess } = useTelegram();
+  const { haptic, hapticSuccess, user } = useTelegram();
+  const [items, setItems] = useState<Item[]>(() => getItems());
   const [activeCategory, setActiveCategory] = useState<ItemCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortMode, setSortMode] = useState<SortMode>('newer');
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('catalog');
-  const [isLoading, setIsLoading] = useState(false);
-  const [cityQuery, setCityQuery] = useState('');
-  const [cities, setCities] = useState<NovaPoshtaCity[]>(mockCities);
-  const [selectedCity, setSelectedCity] = useState<NovaPoshtaCity | null>(null);
-  const [branches, setBranches] = useState<NovaPoshta[]>([]);
-  const [selectedBranch, setSelectedBranch] = useState<NovaPoshta | null>(null);
-  const [paymentDone, setPaymentDone] = useState(false);
-
-  // Sell form state
-  const [sellForm, setSellForm] = useState({
-    title: '', description: '', legend: '', price: '', category: '' as ItemCategory | '', city: '',
+  const [selectedCity, setSelectedCity] = useState<typeof MOCK_CITIES[0] | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+  const [successDirection, setSuccessDirection] = useState('');
+  const [sellForm, setSellForm] = useState<SellForm>({
+    title: '', description: '', legend: '', price: '', category: '', city: '', imageEmoji: '📦',
   });
 
-  const filtered = mockItems.filter(item => {
-    if (activeCategory !== 'all' && item.category !== activeCategory) return false;
-    if (searchQuery && !item.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
+  const refreshItems = () => setItems(getItems());
 
-  const handleCitySearch = async (q: string) => {
-    setCityQuery(q);
-    if (q.length >= 2) {
-      const results = await searchCities(q);
-      setCities(results.length > 0 ? results : mockCities.filter(c => c.description.toLowerCase().includes(q.toLowerCase())));
-    }
-  };
+  const filtered = items
+    .filter(item => {
+      if (activeCategory !== 'all' && item.category !== activeCategory) return false;
+      if (searchQuery && !item.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortMode === 'newer') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (sortMode === 'cheaper') return a.price - b.price;
+      return b.price - a.price;
+    });
 
-  const handleCitySelect = async (city: NovaPoshtaCity) => {
-    setSelectedCity(city);
-    setCityQuery(city.description);
-    setCities([]);
-    const b = await getBranches(city.ref);
-    setBranches(b.length > 0 ? b : mockBranches);
-  };
-
-  const handleBuy = (item: Item) => {
+  const handleBuyClick = (item: Item) => {
     haptic('medium');
     setSelectedItem(item);
-    setViewMode('checkout');
-  };
-
-  const handlePayment = async () => {
-    if (!selectedItem) return;
-    setIsLoading(true);
-    haptic('medium');
-    try {
-      // Mock payment flow since we don't have real credentials
-      await new Promise(r => setTimeout(r, 1500));
-      setViewMode('delivery');
-    } catch {
-      alert('Помилка оплати. Спробуйте ще раз.');
-    } finally {
-      setIsLoading(false);
-    }
+    setSelectedCity(null);
+    setSelectedBranch(null);
+    setViewMode('delivery');
   };
 
   const handleConfirmDelivery = () => {
-    if (!selectedBranch) return;
+    if (!selectedBranch || !selectedItem) return;
     hapticSuccess();
-    setPaymentDone(true);
+    const direction = randomDirection();
+    setSuccessDirection(direction);
+    addTransaction({
+      id: `tx-${Date.now()}`,
+      userId: user?.id ?? 999999,
+      date: new Date().toISOString().split('T')[0],
+      amount: selectedItem.price,
+      direction,
+      type: 'item',
+      itemTitle: selectedItem.title,
+    });
+    markItemSold(selectedItem.id);
+    refreshItems();
+    setViewMode('success');
   };
 
-  if (paymentDone && selectedItem) {
+  const handleSubmitSell = () => {
+    if (!sellForm.title || !sellForm.description || !sellForm.price || !sellForm.category || !sellForm.city) return;
+    hapticSuccess();
+    const newItem: Item = {
+      id: `item-${Date.now()}`,
+      sellerId: user?.id ?? 999999,
+      sellerName: user ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Гість',
+      sellerCity: sellForm.city,
+      title: sellForm.title,
+      description: sellForm.description,
+      legend: sellForm.legend,
+      price: parseInt(sellForm.price, 10) || 0,
+      category: sellForm.category as ItemCategory,
+      city: sellForm.city,
+      status: 'active',
+      images: [sellForm.imageEmoji],
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+    addItem(newItem);
+    refreshItems();
+    setSellForm({ title: '', description: '', legend: '', price: '', category: '', city: '', imageEmoji: '📦' });
+    setViewMode('catalog');
+  };
+
+  // SUCCESS view
+  if (viewMode === 'success' && selectedItem) {
     return (
       <div className="page-container flex flex-col items-center text-center py-12">
-        <div className="text-6xl mb-4">🎉</div>
+        <div className="text-6xl mb-4">✅</div>
         <h2 className="text-2xl font-bold mb-2" style={{ color: '#7CB342' }}>Дякуємо!</h2>
-        <p className="text-base mb-4" style={{ color: '#2A2418' }}>Ваш внесок на суму</p>
+        <p className="text-base mb-1" style={{ color: '#2A2418' }}>Внесок зараховано</p>
         <p className="text-3xl font-bold mb-4" style={{ color: '#F4801A' }}>₴ {selectedItem.price.toLocaleString('uk-UA')}</p>
-        <p className="mb-2" style={{ color: 'rgba(42,36,24,0.7)' }}>іде 100% на підтримку ЗСУ 🇺🇦</p>
-        <p className="text-sm mb-6" style={{ color: 'rgba(42,36,24,0.5)' }}>Доставка на відділення: {selectedBranch?.description}</p>
-        <GlassCard strong className="p-4 w-full mb-6">
-          <p className="text-sm font-medium" style={{ color: '#7CB342' }}>🏆 Ваш слід в обороні України</p>
-          <p className="text-xs mt-1" style={{ color: 'rgba(42,36,24,0.6)' }}>Кожна покупка — це крок до перемоги</p>
+        <GlassCard strong className="p-4 w-full mb-4">
+          <p className="text-sm font-medium mb-1" style={{ color: '#7CB342' }}>Напрям підтримки:</p>
+          <p className="text-base font-bold" style={{ color: '#2A2418' }}>{successDirection}</p>
         </GlassCard>
-        <button className="btn-primary w-full" onClick={() => { setPaymentDone(false); setViewMode('catalog'); setSelectedItem(null); }}>
+        <GlassCard className="p-4 w-full mb-6">
+          <p className="text-xs font-semibold mb-2" style={{ color: '#2A2418' }}>🧾 Квитанція</p>
+          <div className="text-left space-y-1">
+            <p className="text-xs" style={{ color: 'rgba(42,36,24,0.7)' }}>Товар: {selectedItem.title}</p>
+            <p className="text-xs" style={{ color: 'rgba(42,36,24,0.7)' }}>Сума: ₴ {selectedItem.price.toLocaleString('uk-UA')}</p>
+            <p className="text-xs" style={{ color: 'rgba(42,36,24,0.7)' }}>Відділення: {selectedBranch}</p>
+            <p className="text-xs" style={{ color: 'rgba(42,36,24,0.7)' }}>Дата: {new Date().toLocaleDateString('uk-UA')}</p>
+          </div>
+        </GlassCard>
+        <button className="btn-primary w-full" onClick={() => { setViewMode('catalog'); setSelectedItem(null); }}>
           Повернутись до каталогу
         </button>
       </div>
     );
   }
 
+  // DELIVERY view
   if (viewMode === 'delivery' && selectedItem) {
     return (
       <div className="page-container">
-        <button className="flex items-center gap-2 mb-4 text-sm" style={{ color: '#F4801A' }} onClick={() => setViewMode('checkout')}>
+        <button className="flex items-center gap-2 mb-4 text-sm" style={{ color: '#F4801A' }} onClick={() => setViewMode('detail')}>
           ← Назад
         </button>
         <h2 className="section-title">🚚 Обери відділення Нової Пошти</h2>
@@ -206,38 +199,30 @@ export default function Items() {
 
         <div className="mb-4">
           <label className="text-sm font-medium block mb-2" style={{ color: '#2A2418' }}>Місто</label>
-          <input
-            placeholder="Введіть назву міста..."
-            value={cityQuery}
-            onChange={e => handleCitySearch(e.target.value)}
-          />
-          {cities.length > 0 && cityQuery.length >= 2 && !selectedCity && (
-            <div className="glass-card mt-2 overflow-hidden">
-              {cities.slice(0, 5).map(city => (
-                <button
-                  key={city.ref}
-                  className="w-full text-left px-4 py-3 text-sm border-b border-white/20 last:border-0"
-                  style={{ color: '#2A2418' }}
-                  onClick={() => handleCitySelect(city)}
-                >
-                  {city.description}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="space-y-2">
+            {MOCK_CITIES.map(city => (
+              <GlassCard
+                key={city.id}
+                className={`p-3 cursor-pointer ${selectedCity?.id === city.id ? 'ring-2 ring-orange-400' : ''}`}
+                onClick={() => { haptic('light'); setSelectedCity(city); setSelectedBranch(null); }}
+              >
+                <p className="text-sm font-medium" style={{ color: '#2A2418' }}>{city.name}</p>
+              </GlassCard>
+            ))}
+          </div>
         </div>
 
-        {branches.length > 0 && (
+        {selectedCity && (
           <div className="mb-6">
             <label className="text-sm font-medium block mb-2" style={{ color: '#2A2418' }}>Відділення</label>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {branches.slice(0, 8).map(branch => (
+            <div className="space-y-2">
+              {selectedCity.branches.map((branch, i) => (
                 <GlassCard
-                  key={branch.ref}
-                  className={`p-3 cursor-pointer ${selectedBranch?.ref === branch.ref ? 'ring-2 ring-orange-400' : ''}`}
+                  key={i}
+                  className={`p-3 cursor-pointer ${selectedBranch === branch ? 'ring-2 ring-orange-400' : ''}`}
                   onClick={() => { haptic('light'); setSelectedBranch(branch); }}
                 >
-                  <p className="text-xs" style={{ color: '#2A2418' }}>{branch.description}</p>
+                  <p className="text-xs" style={{ color: '#2A2418' }}>{branch}</p>
                 </GlassCard>
               ))}
             </div>
@@ -256,54 +241,9 @@ export default function Items() {
     );
   }
 
-  if (viewMode === 'checkout' && selectedItem) {
-    return (
-      <div className="page-container">
-        <button className="flex items-center gap-2 mb-4 text-sm" style={{ color: '#F4801A' }} onClick={() => setViewMode('detail')}>
-          ← Назад
-        </button>
-        <h2 className="section-title">💳 Оплата = Внесок до ЗСУ</h2>
-
-        <GlassCard strong className="p-4 mb-4">
-          <div className="flex justify-between items-start mb-3">
-            <h3 className="font-semibold text-base flex-1 pr-4" style={{ color: '#2A2418' }}>{selectedItem.title}</h3>
-            <span className="badge-zsu">100% → ЗСУ</span>
-          </div>
-          <p className="text-2xl font-bold" style={{ color: '#F4801A' }}>₴ {selectedItem.price.toLocaleString('uk-UA')}</p>
-          <p className="text-xs mt-1" style={{ color: 'rgba(42,36,24,0.5)' }}>Продавець: {selectedItem.sellerName} • {selectedItem.city}</p>
-        </GlassCard>
-
-        <GlassCard className="p-4 mb-6">
-          <h3 className="font-semibold text-sm mb-3" style={{ color: '#2A2418' }}>Куди йдуть кошти:</h3>
-          <div className="space-y-2">
-            {[
-              { icon: '🚁', text: 'Розробка FPV-дронів та «Змія»', pct: '40%' },
-              { icon: '🔬', text: 'Гурток «Науковий»', pct: '25%' },
-              { icon: '⚔️', text: '3-тя штурмова бригада', pct: '20%' },
-              { icon: '🛡️', text: '47-ма бригада МАҐУРА', pct: '15%' },
-            ].map(item => (
-              <div key={item.text} className="flex items-center gap-2">
-                <span>{item.icon}</span>
-                <span className="flex-1 text-xs" style={{ color: 'rgba(42,36,24,0.7)' }}>{item.text}</span>
-                <span className="text-xs font-semibold" style={{ color: '#7CB342' }}>{item.pct}</span>
-              </div>
-            ))}
-          </div>
-        </GlassCard>
-
-        <button
-          className="btn-primary w-full flex items-center justify-center gap-2"
-          onClick={handlePayment}
-          disabled={isLoading}
-        >
-          {isLoading ? <LoadingSpinner size={20} /> : <>💳 Оплатити через LiqPay</>}
-        </button>
-        <p className="text-center text-xs mt-3" style={{ color: 'rgba(42,36,24,0.4)' }}>Безпечна оплата · 100% → ЗСУ</p>
-      </div>
-    );
-  }
-
+  // DETAIL view
   if (viewMode === 'detail' && selectedItem) {
+    const emoji = selectedItem.images?.[0] || '📦';
     return (
       <div className="page-container">
         <button className="flex items-center gap-2 mb-4 text-sm" style={{ color: '#F4801A' }} onClick={() => setViewMode('catalog')}>
@@ -311,7 +251,7 @@ export default function Items() {
         </button>
 
         <div className="w-full h-48 rounded-2xl flex items-center justify-center text-6xl mb-4" style={{ background: 'linear-gradient(135deg, rgba(124,179,66,0.15), rgba(244,128,26,0.1))' }}>
-          📦
+          {emoji}
         </div>
 
         <div className="flex items-start justify-between mb-2">
@@ -347,7 +287,7 @@ export default function Items() {
         </GlassCard>
 
         {selectedItem.status === 'active' ? (
-          <button className="btn-green w-full text-base" onClick={() => handleBuy(selectedItem)}>
+          <button className="btn-green w-full text-base" onClick={() => handleBuyClick(selectedItem)}>
             💙 Купити = внесок до ЗСУ
           </button>
         ) : (
@@ -359,6 +299,7 @@ export default function Items() {
     );
   }
 
+  // SELL FORM view
   if (viewMode === 'sell') {
     return (
       <div className="page-container">
@@ -370,7 +311,7 @@ export default function Items() {
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium block mb-1" style={{ color: '#2A2418' }}>Назва *</label>
-            <input placeholder="Наприклад: Ноутбук Dell, 16GB RAM" value={sellForm.title} onChange={e => setSellForm(f => ({ ...f, title: e.target.value }))} />
+            <input placeholder="Наприклад: iPhone 12, Рюкзак Osprey..." value={sellForm.title} onChange={e => setSellForm(f => ({ ...f, title: e.target.value }))} />
           </div>
 
           <div>
@@ -380,7 +321,7 @@ export default function Items() {
 
           <div>
             <label className="text-sm font-medium block mb-1" style={{ color: '#7CB342' }}>📖 Легенда речі (необов'язково)</label>
-            <textarea rows={3} placeholder="Розкажіть історію цієї речі. Чому вона для вас важлива? Звідки вона прийшла?" value={sellForm.legend} onChange={e => setSellForm(f => ({ ...f, legend: e.target.value }))} />
+            <textarea rows={3} placeholder="Розкажіть історію цієї речі..." value={sellForm.legend} onChange={e => setSellForm(f => ({ ...f, legend: e.target.value }))} />
           </div>
 
           <div>
@@ -408,20 +349,31 @@ export default function Items() {
             <input placeholder="Ваше місто" value={sellForm.city} onChange={e => setSellForm(f => ({ ...f, city: e.target.value }))} />
           </div>
 
-          <div className="glass-card-strong p-4">
-            <p className="text-xs" style={{ color: '#7CB342' }}>✅ Підтверджую, що 100% виторгу перейдуть на підтримку ЗСУ через фонд "Support Ukraine"</p>
+          <div>
+            <label className="text-sm font-medium block mb-2" style={{ color: '#2A2418' }}>Емодзі-зображення</label>
+            <div className="flex flex-wrap gap-2">
+              {EMOJI_OPTIONS.map(emoji => (
+                <button
+                  key={emoji}
+                  className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center ${sellForm.imageEmoji === emoji ? 'ring-2 ring-orange-400' : ''}`}
+                  style={{ background: 'rgba(255,255,255,0.3)' }}
+                  onClick={() => setSellForm(f => ({ ...f, imageEmoji: emoji }))}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
           </div>
+
+          <GlassCard strong className="p-4">
+            <p className="text-xs" style={{ color: '#7CB342' }}>✅ Підтверджую, що 100% виторгу перейдуть на підтримку ЗСУ</p>
+          </GlassCard>
 
           <button
             className="btn-primary w-full"
             disabled={!sellForm.title || !sellForm.description || !sellForm.price || !sellForm.category || !sellForm.city}
             style={{ opacity: (!sellForm.title || !sellForm.description || !sellForm.price || !sellForm.category || !sellForm.city) ? 0.5 : 1 }}
-            onClick={() => {
-              hapticSuccess();
-              alert('Оголошення відправлено на модерацію! 🎉');
-              setViewMode('catalog');
-              setSellForm({ title: '', description: '', legend: '', price: '', category: '', city: '' });
-            }}
+            onClick={handleSubmitSell}
           >
             🚀 Виставити на продаж
           </button>
@@ -430,6 +382,7 @@ export default function Items() {
     );
   }
 
+  // CATALOG view
   return (
     <div className="page-container">
       <div className="flex items-center justify-between mb-4">
@@ -439,13 +392,11 @@ export default function Items() {
         </button>
       </div>
 
-      {/* Search */}
       <div className="mb-4">
         <input placeholder="🔍 Пошук речей..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
       </div>
 
-      {/* Category filters */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-4 pb-1">
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-3 pb-1">
         {categories.map(cat => (
           <button
             key={cat.id}
@@ -457,12 +408,22 @@ export default function Items() {
         ))}
       </div>
 
-      {/* Results count */}
+      <div className="flex gap-2 mb-4">
+        {(['newer', 'cheaper', 'pricier'] as SortMode[]).map(s => (
+          <button
+            key={s}
+            className={`chip text-xs ${sortMode === s ? 'active' : ''}`}
+            onClick={() => setSortMode(s)}
+          >
+            {s === 'newer' ? 'Новіші' : s === 'cheaper' ? 'Дешевші' : 'Дорожчі'}
+          </button>
+        ))}
+      </div>
+
       <p className="text-xs mb-4" style={{ color: 'rgba(42,36,24,0.5)' }}>
-        {filtered.length} {filtered.length === 1 ? 'оголошення' : 'оголошень'} • Відображаються активні
+        {filtered.length} {filtered.length === 1 ? 'оголошення' : 'оголошень'}
       </p>
 
-      {/* Grid */}
       <div className="grid grid-cols-2 gap-3">
         {filtered.map(item => (
           <ItemCard

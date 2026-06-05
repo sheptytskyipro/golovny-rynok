@@ -4,6 +4,7 @@ import GlassCard from '../components/GlassCard';
 import ServiceCard from '../components/ServiceCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useTelegram } from '../hooks/useTelegram';
+import { getServices, addService, addTransaction, markServiceSold, randomDirection } from '../store';
 
 const categories: { id: ServiceCategory | 'all'; label: string; emoji: string }[] = [
   { id: 'all', label: 'Усі', emoji: '🌐' },
@@ -17,81 +18,112 @@ const categories: { id: ServiceCategory | 'all'; label: string; emoji: string }[
   { id: 'юридичні', label: 'Юридичні', emoji: '⚖️' },
 ];
 
-const mockServices: Service[] = [
-  {
-    id: 's1', providerId: 1, providerName: 'Олена Коваль',
-    title: 'Курс англійської мови для початківців (8 занять)',
-    description: 'Базовий курс розмовної англійської. Заняття 1 год, онлайн. Сертифікат після завершення.',
-    price: 2400, category: 'освіта', format: 'онлайн', duration: '8 год',
-    status: 'active', createdAt: '2024-02-15',
-  },
-  {
-    id: 's2', providerId: 2, providerName: 'Артем Дизайн',
-    title: 'Дизайн логотипу та фірмового стилю',
-    description: 'Повний фірмовий стиль: логотип, кольорова палітра, шрифти, візитки. До 3 варіантів.',
-    price: 3500, category: 'дизайн', format: 'онлайн', duration: '5-7 днів',
-    status: 'active', createdAt: '2024-02-12',
-  },
-  {
-    id: 's3', providerId: 3, providerName: 'Микола Dev',
-    title: 'Landing page на React (повністю адаптивна)',
-    description: 'Сучасний лендінг на React + TypeScript. SEO-оптимізація, мобільна версія, анімації.',
-    price: 8000, category: 'IT', format: 'онлайн', duration: '7-10 днів',
-    status: 'active', createdAt: '2024-02-10',
-  },
-  {
-    id: 's4', providerId: 4, providerName: 'Іван Майстер',
-    title: 'Ремонт ноутбука (діагностика + ремонт)',
-    description: 'Повна діагностика, заміна термопасти, чищення від пилу, ремонт клавіатури чи екрану.',
-    price: 800, category: 'ремонт', format: 'офлайн', duration: '1-2 дні',
-    status: 'active', createdAt: '2024-02-08',
-  },
-  {
-    id: 's5', providerId: 5, providerName: 'Аліна Фото',
-    title: 'Фотосесія (портретна, 2 год, 30 фото)',
-    description: 'Портретна або сімейна фотосесія. Ретушування 30 фото, передача у форматі JPG та RAW.',
-    price: 2800, category: 'фото/відео', format: 'офлайн', duration: '2 год',
-    status: 'active', createdAt: '2024-02-05',
-  },
-  {
-    id: 's6', providerId: 6, providerName: 'Катерина Ю.',
-    title: 'Консультація юриста (1 год)',
-    description: 'Юридична консультація з будь-яких питань: нерухомість, трудові спори, сімейне право.',
-    price: 1200, category: 'юридичні', format: 'онлайн/офлайн', duration: '1 год',
-    status: 'active', createdAt: '2024-02-03',
-  },
-];
+const EMOJI_OPTIONS = ['💻', '🎨', '🔧', '📸', '📝', '⚖️', '🎓', '🌍', '🎵', '🏋️', '🍳', '✂️'];
 
-type ViewMode = 'catalog' | 'detail' | 'offer' | 'checkout';
+type ViewMode = 'catalog' | 'detail' | 'offer' | 'checkout' | 'success';
+type FormatFilter = 'all' | 'онлайн' | 'офлайн';
 
 export default function Services() {
-  const { haptic, hapticSuccess } = useTelegram();
+  const { haptic, hapticSuccess, user } = useTelegram();
+  const [services, setServices] = useState<Service[]>(() => getServices());
   const [activeCategory, setActiveCategory] = useState<ServiceCategory | 'all'>('all');
+  const [formatFilter, setFormatFilter] = useState<FormatFilter>('all');
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('catalog');
   const [isLoading, setIsLoading] = useState(false);
-  const [contactRevealed, setContactRevealed] = useState(false);
+  const [successDirection, setSuccessDirection] = useState('');
   const [offerForm, setOfferForm] = useState({
     title: '', description: '', price: '', category: '' as ServiceCategory | '',
-    format: '' as Service['format'] | '', duration: '',
+    format: '' as Service['format'] | '', duration: '', contact: '', emoji: '💻',
   });
 
-  const filtered = mockServices.filter(s => activeCategory === 'all' || s.category === activeCategory);
+  const refreshServices = () => setServices(getServices());
+
+  const filtered = services.filter(s => {
+    if (activeCategory !== 'all' && s.category !== activeCategory) return false;
+    if (formatFilter !== 'all' && !s.format.includes(formatFilter)) return false;
+    return true;
+  });
 
   const handlePay = async () => {
     if (!selectedService) return;
     setIsLoading(true);
     haptic('medium');
-    try {
-      await new Promise(r => setTimeout(r, 1500));
-      setContactRevealed(true);
-    } catch {
-      alert('Помилка оплати');
-    } finally {
-      setIsLoading(false);
-    }
+    await new Promise(r => setTimeout(r, 1500));
+    setIsLoading(false);
+    const direction = randomDirection();
+    setSuccessDirection(direction);
+    addTransaction({
+      id: `tx-${Date.now()}`,
+      userId: user?.id ?? 999999,
+      date: new Date().toISOString().split('T')[0],
+      amount: selectedService.price,
+      direction,
+      type: 'service',
+      itemTitle: selectedService.title,
+    });
+    markServiceSold(selectedService.id);
+    refreshServices();
+    setViewMode('success');
   };
 
+  const handleSubmitOffer = () => {
+    if (!offerForm.title || !offerForm.description || !offerForm.price || !offerForm.category) return;
+    hapticSuccess();
+    const newService: Service = {
+      id: `svc-${Date.now()}`,
+      providerId: user?.id ?? 999999,
+      providerName: user ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Гість',
+      title: offerForm.title,
+      description: offerForm.description,
+      price: parseInt(offerForm.price, 10) || 0,
+      category: offerForm.category as ServiceCategory,
+      format: (offerForm.format || 'онлайн') as Service['format'],
+      duration: offerForm.duration || '—',
+      status: 'active',
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+    addService(newService);
+    refreshServices();
+    setOfferForm({ title: '', description: '', price: '', category: '', format: '', duration: '', contact: '', emoji: '💻' });
+    setViewMode('catalog');
+  };
+
+  // SUCCESS view
+  if (viewMode === 'success' && selectedService) {
+    return (
+      <div className="page-container flex flex-col items-center text-center py-12">
+        <div className="text-6xl mb-4">✅</div>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: '#7CB342' }}>Внесок зараховано!</h2>
+        <p className="text-3xl font-bold mb-4" style={{ color: '#F4801A' }}>₴ {selectedService.price.toLocaleString('uk-UA')}</p>
+        <GlassCard strong className="p-4 w-full mb-4">
+          <p className="text-sm font-medium mb-1" style={{ color: '#7CB342' }}>Напрям підтримки:</p>
+          <p className="text-base font-bold" style={{ color: '#2A2418' }}>{successDirection}</p>
+        </GlassCard>
+        <GlassCard className="p-4 w-full mb-6">
+          <p className="text-xs font-semibold mb-2" style={{ color: '#2A2418' }}>Контактні дані виконавця:</p>
+          <div className="text-left space-y-1">
+            <div className="flex items-center gap-2">
+              <span>👤</span>
+              <span className="text-sm" style={{ color: '#2A2418' }}>{selectedService.providerName}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>✉️</span>
+              <span className="text-sm" style={{ color: '#F4801A' }}>
+                @{selectedService.providerName.toLowerCase().replace(/\s+/g, '_')}
+              </span>
+            </div>
+          </div>
+          <p className="text-xs mt-3" style={{ color: 'rgba(42,36,24,0.5)' }}>Дякуємо! Ваш внесок іде на підтримку ЗСУ 🇺🇦</p>
+        </GlassCard>
+        <button className="btn-green w-full" onClick={() => { setViewMode('catalog'); setSelectedService(null); }}>
+          Повернутись до послуг
+        </button>
+      </div>
+    );
+  }
+
+  // CHECKOUT view
   if (viewMode === 'checkout' && selectedService) {
     return (
       <div className="page-container">
@@ -112,53 +144,40 @@ export default function Services() {
           </div>
         </GlassCard>
 
-        {contactRevealed ? (
-          <GlassCard strong className="p-4 mb-6">
-            <h3 className="font-semibold mb-2" style={{ color: '#7CB342' }}>✅ Оплата підтверджена!</h3>
-            <p className="text-sm mb-3" style={{ color: '#2A2418' }}>Контактні дані виконавця:</p>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span>👤</span>
-                <span className="text-sm" style={{ color: '#2A2418' }}>{selectedService.providerName}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>✉️</span>
-                <span className="text-sm" style={{ color: '#F4801A' }}>@{selectedService.providerName.toLowerCase().replace(' ', '_')}</span>
-              </div>
+        {/* Fake LiqPay-style card UI */}
+        <GlassCard className="p-4 mb-4">
+          <p className="text-sm font-semibold mb-3" style={{ color: '#2A2418' }}>💳 Дані картки (демо)</p>
+          <div className="space-y-3">
+            <input placeholder="0000 0000 0000 0000" disabled className="opacity-60" />
+            <div className="flex gap-3">
+              <input placeholder="MM/YY" disabled className="opacity-60 flex-1" />
+              <input placeholder="CVV" disabled className="opacity-60 flex-1" />
             </div>
-            <p className="text-xs mt-3" style={{ color: 'rgba(42,36,24,0.5)' }}>Дякуємо! Ваш внесок іде на підтримку ЗСУ 🇺🇦</p>
-          </GlassCard>
-        ) : (
-          <>
-            <GlassCard className="p-4 mb-6">
-              <p className="text-sm font-medium mb-2" style={{ color: '#2A2418' }}>Після оплати ви отримаєте:</p>
-              <ul className="space-y-1">
-                <li className="text-sm flex gap-2" style={{ color: 'rgba(42,36,24,0.7)' }}>
-                  <span style={{ color: '#7CB342' }}>✓</span> Контакти виконавця
-                </li>
-                <li className="text-sm flex gap-2" style={{ color: 'rgba(42,36,24,0.7)' }}>
-                  <span style={{ color: '#7CB342' }}>✓</span> Підтвердження внеску до ЗСУ
-                </li>
-                <li className="text-sm flex gap-2" style={{ color: 'rgba(42,36,24,0.7)' }}>
-                  <span style={{ color: '#7CB342' }}>✓</span> Чек про благодійний платіж
-                </li>
-              </ul>
-            </GlassCard>
-            <button className="btn-primary w-full flex items-center justify-center gap-2" onClick={handlePay} disabled={isLoading}>
-              {isLoading ? <LoadingSpinner size={20} /> : <>💳 Оплатити через LiqPay</>}
-            </button>
-          </>
-        )}
+          </div>
+          <p className="text-xs mt-2" style={{ color: 'rgba(42,36,24,0.4)' }}>* Демо-режим. Реальна оплата не проводиться.</p>
+        </GlassCard>
 
-        {contactRevealed && (
-          <button className="btn-green w-full mt-3" onClick={() => { setViewMode('catalog'); setContactRevealed(false); setSelectedService(null); }}>
-            Повернутись до послуг
-          </button>
-        )}
+        <GlassCard className="p-4 mb-6">
+          <p className="text-sm font-medium mb-2" style={{ color: '#2A2418' }}>Після оплати ви отримаєте:</p>
+          <ul className="space-y-1">
+            <li className="text-sm flex gap-2" style={{ color: 'rgba(42,36,24,0.7)' }}>
+              <span style={{ color: '#7CB342' }}>✓</span> Контакти виконавця
+            </li>
+            <li className="text-sm flex gap-2" style={{ color: 'rgba(42,36,24,0.7)' }}>
+              <span style={{ color: '#7CB342' }}>✓</span> Підтвердження внеску до ЗСУ
+            </li>
+          </ul>
+        </GlassCard>
+
+        <button className="btn-primary w-full flex items-center justify-center gap-2" onClick={handlePay} disabled={isLoading}>
+          {isLoading ? <LoadingSpinner size={20} /> : <>💳 Оплатити (демо)</>}
+        </button>
+        <p className="text-center text-xs mt-3" style={{ color: 'rgba(42,36,24,0.4)' }}>Демо-режим · 100% → ЗСУ</p>
       </div>
     );
   }
 
+  // DETAIL view
   if (viewMode === 'detail' && selectedService) {
     return (
       <div className="page-container">
@@ -200,13 +219,20 @@ export default function Services() {
           </div>
         </GlassCard>
 
-        <button className="btn-green w-full text-base" onClick={() => { haptic('medium'); setViewMode('checkout'); }}>
-          💙 Купити послугу = внесок до ЗСУ
-        </button>
+        {selectedService.status === 'active' ? (
+          <button className="btn-green w-full text-base" onClick={() => { haptic('medium'); setViewMode('checkout'); }}>
+            💙 Купити послугу = внесок до ЗСУ
+          </button>
+        ) : (
+          <div className="w-full py-3 text-center rounded-xl font-semibold text-sm" style={{ background: 'rgba(0,0,0,0.1)', color: 'rgba(42,36,24,0.4)' }}>
+            Вже придбано
+          </div>
+        )}
       </div>
     );
   }
 
+  // OFFER FORM view
   if (viewMode === 'offer') {
     return (
       <div className="page-container">
@@ -258,6 +284,27 @@ export default function Services() {
             <input placeholder="Наприклад: 1 год, 3 дні, 2 тижні" value={offerForm.duration} onChange={e => setOfferForm(f => ({ ...f, duration: e.target.value }))} />
           </div>
 
+          <div>
+            <label className="text-sm font-medium block mb-1" style={{ color: '#2A2418' }}>Контакт (email або Telegram)</label>
+            <input placeholder="email або @username" value={offerForm.contact} onChange={e => setOfferForm(f => ({ ...f, contact: e.target.value }))} />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium block mb-2" style={{ color: '#2A2418' }}>Емодзі</label>
+            <div className="flex flex-wrap gap-2">
+              {EMOJI_OPTIONS.map(emoji => (
+                <button
+                  key={emoji}
+                  className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center ${offerForm.emoji === emoji ? 'ring-2 ring-orange-400' : ''}`}
+                  style={{ background: 'rgba(255,255,255,0.3)' }}
+                  onClick={() => setOfferForm(f => ({ ...f, emoji }))}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <GlassCard strong className="p-4">
             <p className="text-xs" style={{ color: '#7CB342' }}>✅ Підтверджую, що 100% від оплати послуги перейдуть на підтримку ЗСУ</p>
           </GlassCard>
@@ -266,11 +313,7 @@ export default function Services() {
             className="btn-primary w-full"
             disabled={!offerForm.title || !offerForm.description || !offerForm.price || !offerForm.category}
             style={{ opacity: (!offerForm.title || !offerForm.description || !offerForm.price || !offerForm.category) ? 0.5 : 1 }}
-            onClick={() => {
-              hapticSuccess();
-              alert('Послугу відправлено на модерацію! 🎉');
-              setViewMode('catalog');
-            }}
+            onClick={handleSubmitOffer}
           >
             🚀 Запропонувати послугу
           </button>
@@ -279,6 +322,7 @@ export default function Services() {
     );
   }
 
+  // CATALOG view
   return (
     <div className="page-container">
       <div className="flex items-center justify-between mb-4">
@@ -293,10 +337,18 @@ export default function Services() {
         <p className="text-xs" style={{ color: 'rgba(42,36,24,0.7)' }}>Купуй послугу → вноси в ЗСУ. Контакт виконавця відкривається після оплати.</p>
       </GlassCard>
 
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-4 pb-1">
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-3 pb-1">
         {categories.map(cat => (
           <button key={cat.id} className={`chip flex-shrink-0 ${activeCategory === cat.id ? 'active' : ''}`} onClick={() => { haptic('light'); setActiveCategory(cat.id); }}>
             {cat.emoji} {cat.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        {(['all', 'онлайн', 'офлайн'] as FormatFilter[]).map(f => (
+          <button key={f} className={`chip text-xs ${formatFilter === f ? 'active' : ''}`} onClick={() => setFormatFilter(f)}>
+            {f === 'all' ? 'Будь-який' : f}
           </button>
         ))}
       </div>

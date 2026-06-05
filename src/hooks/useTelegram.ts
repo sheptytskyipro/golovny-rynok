@@ -8,20 +8,22 @@ declare global {
   }
 }
 
+const GUEST_USER = {
+  id: 999999,
+  first_name: 'Гість',
+  last_name: '',
+  username: 'guest',
+  photo_url: '',
+};
+
 const mockTelegram = {
   WebApp: {
     ready: () => {},
     expand: () => {},
     close: () => {},
-    initData: 'mock_init_data',
+    initData: '',
     initDataUnsafe: {
-      user: {
-        id: 123456789,
-        first_name: 'Тестовий',
-        last_name: 'Користувач',
-        username: 'test_user',
-        photo_url: ''
-      }
+      user: GUEST_USER,
     },
     MainButton: {
       text: '',
@@ -68,6 +70,7 @@ const mockTelegram = {
 };
 
 export function useTelegram() {
+  const isInTelegram = !!(window.Telegram?.WebApp);
   const tg = (window.Telegram?.WebApp ?? mockTelegram.WebApp) as TelegramWebApp;
 
   const haptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
@@ -86,7 +89,7 @@ export function useTelegram() {
     }
   };
 
-  const user = tg.initDataUnsafe?.user;
+  const user = tg.initDataUnsafe?.user ?? GUEST_USER;
 
   return {
     tg,
@@ -94,5 +97,6 @@ export function useTelegram() {
     haptic,
     hapticSuccess,
     isReady: true,
+    isInTelegram,
   };
 }

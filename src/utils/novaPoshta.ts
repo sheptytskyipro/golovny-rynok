@@ -1,4 +1,4 @@
-// Nova Poshta API integration utilities
+// Nova Poshta mock data — no API calls, fully offline
 
 export interface NovaPoshta {
   ref: string;
@@ -14,78 +14,71 @@ export interface NovaPoshtaCity {
   areaDescription: string;
 }
 
-const NP_API_URL = 'https://api.novaposhta.ua/v2.0/json/';
-
-async function npRequest(model: string, method: string, props: Record<string, unknown> = {}) {
-  const apiKey = import.meta.env.VITE_NOVA_POSHTA_API_KEY || '';
-  const body = {
-    apiKey,
-    modelName: model,
-    calledMethod: method,
-    methodProperties: props,
-  };
-
-  const response = await fetch(NP_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  const data = await response.json();
-  return data.data || [];
-}
-
-export async function searchCities(query: string): Promise<NovaPoshtaCity[]> {
-  if (!query || query.length < 2) return [];
-  try {
-    const data = await npRequest('Address', 'searchSettlements', {
-      CityName: query,
-      Limit: 10,
-    });
-    if (data[0]?.Addresses) {
-      return data[0].Addresses.map((a: { Ref: string; Present: string; SettlementRef?: string }) => ({
-        ref: a.Ref,
-        description: a.Present,
-        areaDescription: '',
-      }));
-    }
-    return [];
-  } catch {
-    return mockCities.filter(c => c.description.toLowerCase().includes(query.toLowerCase()));
-  }
-}
-
-export async function getBranches(cityRef: string): Promise<NovaPoshta[]> {
-  if (!cityRef) return [];
-  try {
-    const data = await npRequest('AddressGeneral', 'getWarehouses', {
-      CityRef: cityRef,
-      Limit: 50,
-    });
-    return data.map((w: { Ref: string; Description: string; CityRef: string; Number: string }) => ({
-      ref: w.Ref,
-      description: w.Description,
-      cityRef: w.CityRef,
-      number: w.Number,
-    }));
-  } catch {
-    return mockBranches;
-  }
-}
-
-// Mock data for development
-export const mockCities: NovaPoshtaCity[] = [
-  { ref: 'city-kyiv', description: 'Київ', areaDescription: 'Київська' },
-  { ref: 'city-lviv', description: 'Львів', areaDescription: 'Львівська' },
-  { ref: 'city-kharkiv', description: 'Харків', areaDescription: 'Харківська' },
-  { ref: 'city-odesa', description: 'Одеса', areaDescription: 'Одеська' },
-  { ref: 'city-dnipro', description: 'Дніпро', areaDescription: 'Дніпропетровська' },
-  { ref: 'city-zaporizhzhia', description: 'Запоріжжя', areaDescription: 'Запорізька' },
+export const MOCK_CITIES = [
+  {
+    id: 'kyiv', name: 'Київ',
+    branches: [
+      'Відділення №1: вул. Хрещатик, 22',
+      'Відділення №3: пр. Перемоги, 15',
+      'Поштомат №12: ТРЦ Арена Сіті',
+    ],
+  },
+  {
+    id: 'lviv', name: 'Львів',
+    branches: [
+      'Відділення №2: вул. Городоцька, 189',
+      'Відділення №5: вул. Стрийська, 45',
+      'Поштомат №7: ТРЦ Форум Львів',
+    ],
+  },
+  {
+    id: 'kharkiv', name: 'Харків',
+    branches: [
+      'Відділення №1: пр. Науки, 14',
+      'Відділення №4: вул. Клочківська, 192',
+    ],
+  },
+  {
+    id: 'odesa', name: 'Одеса',
+    branches: [
+      'Відділення №2: вул. Рішельєвська, 33',
+      'Відділення №6: пр. Шевченка, 4',
+    ],
+  },
+  {
+    id: 'dnipro', name: 'Дніпро',
+    branches: [
+      'Відділення №3: вул. Робоча, 2а',
+      'Відділення №8: пр. Гагаріна, 72',
+    ],
+  },
 ];
+
+// Legacy compat exports
+export const mockCities: NovaPoshtaCity[] = MOCK_CITIES.map(c => ({
+  ref: `city-${c.id}`,
+  description: c.name,
+  areaDescription: '',
+}));
 
 export const mockBranches: NovaPoshta[] = [
-  { ref: 'branch-1', description: 'Відділення №1 (до 30 кг): вул. Шевченка, 1', cityRef: 'city-kyiv', number: '1' },
-  { ref: 'branch-2', description: 'Відділення №2 (до 30 кг): вул. Хрещатик, 22', cityRef: 'city-kyiv', number: '2' },
-  { ref: 'branch-3', description: 'Відділення №3 (до 30 кг): пр. Перемоги, 15', cityRef: 'city-kyiv', number: '3' },
-  { ref: 'branch-4', description: 'Відділення №4 (до 30 кг): вул. Сагайдачного, 8', cityRef: 'city-kyiv', number: '4' },
+  { ref: 'branch-1', description: 'Відділення №1: вул. Хрещатик, 22', cityRef: 'city-kyiv', number: '1' },
+  { ref: 'branch-2', description: 'Відділення №3: пр. Перемоги, 15', cityRef: 'city-kyiv', number: '3' },
+  { ref: 'branch-3', description: 'Поштомат №12: ТРЦ Арена Сіті', cityRef: 'city-kyiv', number: '12' },
 ];
+
+export function searchCities(query: string): NovaPoshtaCity[] {
+  if (!query || query.length < 2) return mockCities;
+  return mockCities.filter(c => c.description.toLowerCase().includes(query.toLowerCase()));
+}
+
+export function getBranches(cityRef: string): NovaPoshta[] {
+  const city = MOCK_CITIES.find(c => `city-${c.id}` === cityRef);
+  if (!city) return mockBranches;
+  return city.branches.map((b, i) => ({
+    ref: `${cityRef}-branch-${i}`,
+    description: b,
+    cityRef,
+    number: String(i + 1),
+  }));
+}
