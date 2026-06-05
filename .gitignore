@@ -1,0 +1,32 @@
+# Залежності
+node_modules/
+server/node_modules/
+
+# Збірка
+dist/
+server/dist/
+
+# Змінні середовища — НІКОЛИ не комітити реальні ключі!
+.env
+.env.local
+.env.*.local
+server/.env
+server/.env.local
+
+# Редактори
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Логи
+*.log
+npm-debug.log*
+
+# Тимчасові файли
+*.tmp
+*.cache
