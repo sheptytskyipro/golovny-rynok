@@ -2,9 +2,19 @@ import { create } from 'zustand';
 import type { Transaction, ContributionDirection } from '../types';
 import { MOCK_TRANSACTIONS } from '../data/transactions';
 
+// Normalize a raw record from localStorage — old format had 'date' instead of 'createdAt'
+const normalize = (raw: unknown): Transaction => {
+  const t = raw as Record<string, unknown>;
+  return {
+    ...(t as unknown as Transaction),
+    createdAt: (t['createdAt'] as string) ?? (t['date'] as string) ?? new Date().toISOString(),
+  };
+};
+
 const loadTransactions = (): Transaction[] => {
   try {
-    const extra = JSON.parse(localStorage.getItem('gm_transactions') || '[]') as Transaction[];
+    const raw = JSON.parse(localStorage.getItem('gm_transactions') || '[]') as unknown[];
+    const extra = raw.map(normalize);
     return [...extra, ...MOCK_TRANSACTIONS];
   } catch { return MOCK_TRANSACTIONS; }
 };
@@ -38,10 +48,7 @@ export const useMissionStore = create<MissionStore>((set, get) => ({
   byMonth: () => {
     const map: Record<string, number> = {};
     get().transactions.forEach(t => {
-      // guard: old localStorage records may have 'date' instead of 'createdAt'
-      const dateStr: string = t.createdAt ?? (t as unknown as Record<string, string>)['date'] ?? '';
-      if (!dateStr) return;
-      const month = dateStr.slice(0, 7);
+      const month = t.createdAt.slice(0, 7);
       map[month] = (map[month] || 0) + t.amount;
     });
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([month, amount]) => ({ month, amount }));
