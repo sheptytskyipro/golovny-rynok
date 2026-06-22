@@ -38,7 +38,10 @@ export const useMissionStore = create<MissionStore>((set, get) => ({
   byMonth: () => {
     const map: Record<string, number> = {};
     get().transactions.forEach(t => {
-      const month = t.createdAt.slice(0, 7);
+      // guard: old localStorage records may have 'date' instead of 'createdAt'
+      const dateStr: string = t.createdAt ?? (t as unknown as Record<string, string>)['date'] ?? '';
+      if (!dateStr) return;
+      const month = dateStr.slice(0, 7);
       map[month] = (map[month] || 0) + t.amount;
     });
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([month, amount]) => ({ month, amount }));
