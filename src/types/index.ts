@@ -1,113 +1,35 @@
+export type ItemCategory = 'техніка' | 'інструменти' | 'туризм' | 'одяг' | 'дім' | 'дитяче' | 'авто' | 'хобі' | 'вінтаж' | 'хендмейд' | 'спорядження' | 'книги';
+export type ServiceCategory = 'освіта' | 'дизайн' | 'IT' | 'ремонт' | 'фото/відео' | 'краса' | 'переклади' | 'юридичні';
+export type ItemCondition = 'нове' | 'як нове' | 'вживане';
+export type ServiceFormat = 'онлайн' | 'офлайн' | 'гібрид';
+export type ContributionDirection = 'Розробка дронів' | 'Гурток «Науковий»' | '3-тя штурмова' | '47-ма МАҐУРА';
+export type SortOption = 'newest' | 'cheapest' | 'priciest';
+
 export interface TelegramUser {
   id: number;
   first_name: string;
   last_name?: string;
   username?: string;
   photo_url?: string;
-  language_code?: string;
 }
 
-export interface TelegramWebApp {
-  ready: () => void;
-  expand: () => void;
-  close: () => void;
-  initData: string;
-  initDataUnsafe: {
-    user?: TelegramUser;
-    chat?: unknown;
-    start_param?: string;
-  };
-  MainButton: {
-    text: string;
-    color: string;
-    textColor: string;
-    isVisible: boolean;
-    isActive: boolean;
-    show: () => void;
-    hide: () => void;
-    setText: (text: string) => void;
-    onClick: (callback: () => void) => void;
-    offClick: (callback: () => void) => void;
-    enable: () => void;
-    disable: () => void;
-    showProgress: (leaveActive: boolean) => void;
-    hideProgress: () => void;
-  };
-  BackButton: {
-    isVisible: boolean;
-    show: () => void;
-    hide: () => void;
-    onClick: (callback: () => void) => void;
-    offClick: (callback: () => void) => void;
-  };
-  HapticFeedback: {
-    impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void;
-    notificationOccurred: (type: 'error' | 'success' | 'warning') => void;
-    selectionChanged: () => void;
-  };
-  themeParams: {
-    bg_color?: string;
-    text_color?: string;
-    hint_color?: string;
-    link_color?: string;
-    button_color?: string;
-    button_text_color?: string;
-  };
-  colorScheme: 'light' | 'dark';
-  openLink: (url: string) => void;
-  openTelegramLink: (url: string) => void;
-  showPopup: (params: {
-    title?: string;
-    message: string;
-    buttons?: Array<{ id: string; type?: string; text: string }>;
-  }, callback?: (id: string) => void) => void;
-  showAlert: (message: string, callback?: () => void) => void;
-  showConfirm: (message: string, callback?: (ok: boolean) => void) => void;
-}
-
-export type ItemCategory =
-  | 'техніка'
-  | 'інструменти'
-  | 'туризм'
-  | 'одяг'
-  | 'дім'
-  | 'дитяче'
-  | 'авто'
-  | 'хобі'
-  | 'вінтаж'
-  | 'хендмейд'
-  | 'спорядження'
-  | 'книги';
-
-export type ServiceCategory =
-  | 'освіта'
-  | 'дизайн'
-  | 'IT'
-  | 'ремонт'
-  | 'фото/відео'
-  | 'краса'
-  | 'переклади'
-  | 'юридичні';
-
-export type ServiceFormat = 'онлайн' | 'офлайн' | 'онлайн/офлайн';
-
-export interface Item {
+export interface MarketItem {
   id: string;
   sellerId: number;
   sellerName: string;
-  sellerCity: string;
   title: string;
   description: string;
   legend?: string;
   price: number;
   category: ItemCategory;
+  condition: ItemCondition;
   city: string;
-  status: 'active' | 'sold' | 'reserved';
-  images: string[];
+  status: 'active' | 'sold';
+  imageUrl: string;
   createdAt: string;
 }
 
-export interface Service {
+export interface MarketService {
   id: string;
   providerId: number;
   providerName: string;
@@ -118,39 +40,37 @@ export interface Service {
   format: ServiceFormat;
   duration: string;
   status: 'active' | 'sold';
+  imageUrl: string;
+  contactInfo: string;
   createdAt: string;
 }
 
 export interface Transaction {
   id: string;
   userId: number;
-  date: string;
+  itemId?: string;
+  serviceId?: string;
+  itemTitle: string;
   amount: number;
-  direction: string;
+  direction: ContributionDirection;
   type: 'item' | 'service';
-  itemTitle?: string;
+  createdAt: string;
 }
 
-export interface TransparencyStats {
-  totalCollected: number;
-  monthlyData: Array<{
-    month: string;
-    amount: number;
-    transactions: number;
-  }>;
-  directionData: Array<{
-    name: string;
-    value: number;
-    color: string;
-  }>;
-  recentTransactions: Transaction[];
+export interface CategoryDef {
+  id: string;
+  name: string;
+  color: string;
+  iconName: string;
 }
 
-export interface NovaPoshta {
-  ref: string;
-  description: string;
-  cityRef: string;
-  number: string;
+export interface MockCity {
+  id: string;
+  name: string;
+  branches: string[];
 }
 
+// Compat aliases for old code still referencing these
+export type Item = MarketItem;
+export type Service = MarketService;
 export type TabId = 'home' | 'items' | 'services' | 'transparency' | 'myspace';

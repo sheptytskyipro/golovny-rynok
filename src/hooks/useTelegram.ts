@@ -1,102 +1,54 @@
-import { TelegramWebApp } from '../types';
+import { useEffect } from 'react';
+import type { TelegramUser } from '../types';
+import { useUserStore } from '../store/useUserStore';
 
 declare global {
   interface Window {
     Telegram?: {
-      WebApp: TelegramWebApp;
+      WebApp: {
+        ready: () => void;
+        expand: () => void;
+        close: () => void;
+        initDataUnsafe: { user?: TelegramUser };
+        initData: string;
+        HapticFeedback?: {
+          impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void;
+          notificationOccurred: (type: 'error' | 'success' | 'warning') => void;
+        };
+        BackButton?: { show: () => void; hide: () => void; onClick: (fn: () => void) => void; offClick: (fn: () => void) => void };
+        MainButton?: { show: () => void; hide: () => void; setText: (t: string) => void; onClick: (fn: () => void) => void };
+        viewportStableHeight?: number;
+        colorScheme?: 'light' | 'dark';
+      };
     };
   }
 }
 
-const GUEST_USER = {
-  id: 999999,
-  first_name: 'Гість',
-  last_name: '',
-  username: 'guest',
-  photo_url: '',
-};
+const MOCK_USER: TelegramUser = { id: 999999, first_name: 'Гість', last_name: '', username: 'guest' };
 
-const mockTelegram = {
-  WebApp: {
-    ready: () => {},
-    expand: () => {},
-    close: () => {},
-    initData: '',
-    initDataUnsafe: {
-      user: GUEST_USER,
-    },
-    MainButton: {
-      text: '',
-      color: '#F4801A',
-      textColor: '#FFFFFF',
-      isVisible: false,
-      isActive: true,
-      show: () => {},
-      hide: () => {},
-      setText: () => {},
-      onClick: () => {},
-      offClick: () => {},
-      enable: () => {},
-      disable: () => {},
-      showProgress: () => {},
-      hideProgress: () => {},
-    },
-    BackButton: {
-      isVisible: false,
-      show: () => {},
-      hide: () => {},
-      onClick: () => {},
-      offClick: () => {},
-    },
-    HapticFeedback: {
-      impactOccurred: () => {},
-      notificationOccurred: () => {},
-      selectionChanged: () => {},
-    },
-    themeParams: {},
-    colorScheme: 'light' as const,
-    openLink: (url: string) => window.open(url, '_blank'),
-    openTelegramLink: (url: string) => window.open(url, '_blank'),
-    showPopup: (_params: unknown, callback?: (id: string) => void) => {
-      if (callback) callback('ok');
-    },
-    showAlert: (_message: string, callback?: () => void) => {
-      if (callback) callback();
-    },
-    showConfirm: (_message: string, callback?: (ok: boolean) => void) => {
-      if (callback) callback(true);
-    },
-  } as TelegramWebApp
-};
+export const useTelegram = () => {
+  const setUser = useUserStore(s => s.setUser);
+  const storeUser = useUserStore(s => s.user);
+  const tgObj = window.Telegram?.WebApp;
+  const isInTelegram = !!tgObj;
 
-export function useTelegram() {
-  const isInTelegram = !!(window.Telegram?.WebApp);
-  const tg = (window.Telegram?.WebApp ?? mockTelegram.WebApp) as TelegramWebApp;
-
-  const haptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
-    try {
-      tg.HapticFeedback.impactOccurred(style);
-    } catch {
-      // ignore
+  useEffect(() => {
+    if (tgObj) {
+      tgObj.ready();
+      tgObj.expand();
+      setUser(tgObj.initDataUnsafe?.user ?? MOCK_USER);
+    } else {
+      console.warn('[GolovnyiRynok] Browser mode — mock user');
+      setUser(MOCK_USER);
     }
-  };
+  }, []);
 
+  const haptic = (style: 'light' | 'medium' = 'light') => {
+    try { tgObj?.HapticFeedback?.impactOccurred(style); } catch {}
+  };
   const hapticSuccess = () => {
-    try {
-      tg.HapticFeedback.notificationOccurred('success');
-    } catch {
-      // ignore
-    }
+    try { tgObj?.HapticFeedback?.notificationOccurred('success'); } catch {}
   };
 
-  const user = tg.initDataUnsafe?.user ?? GUEST_USER;
-
-  return {
-    tg,
-    user,
-    haptic,
-    hapticSuccess,
-    isReady: true,
-    isInTelegram,
-  };
-}
+  return { tg: tgObj, isInTelegram, user: storeUser, haptic, hapticSuccess };
+};

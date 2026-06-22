@@ -1,0 +1,24 @@
+:root {
+  --bg-base: #15120F;
+  --bg-elevated: #1C1814;
+  --glass-surface: rgba(244, 168, 60, 0.08);
+  --glass-surface-strong: rgba(244, 168, 60, 0.14);
+  --glass-border: rgba(255, 232, 196, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.06);
+  --accent-orange: #F4801A;
+  --accent-yellow: #F5C518;
+  --accent-green: #7CB342;
+  --accent-green-deep: #5C8A38;
+  --text-primary: #F5EFE6;
+  --text-secondary: rgba(245, 239, 230, 0.64);
+  --text-tertiary: rgba(245, 239, 230, 0.38);
+  --success: #7CB342;
+  --danger: #E0533F;
+  --separator: rgba(255, 255, 255, 0.08);
+  --font: -apple-system, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  --radius-card: 24px;
+  --radius-btn: 18px;
+  --radius-sheet: 28px 28px 0 0;
+  --radius-chip: 100px;
+  --tab-bar-height: 60px;
+}

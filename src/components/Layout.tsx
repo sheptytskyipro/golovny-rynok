@@ -1,60 +1,76 @@
-import { ReactNode } from 'react';
-import { TabId } from '../types';
-import AppleLogo from './AppleLogo';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { ShoppingBag, Plus, Heart, User } from 'lucide-react';
 
-interface LayoutProps {
-  children: ReactNode;
-  activeTab: TabId;
-  onTabChange: (tab: TabId) => void;
-}
-
-const tabs: { id: TabId; label: string; icon: string }[] = [
-  { id: 'home', label: 'Головна', icon: '🏠' },
-  { id: 'items', label: 'Речі', icon: '🎁' },
-  { id: 'services', label: 'Послуги', icon: '⚡' },
-  { id: 'transparency', label: 'Прозорість', icon: '📊' },
-  { id: 'myspace', label: 'Я', icon: '👤' },
+const TABS = [
+  { path: '/', icon: ShoppingBag, label: 'Ринок' },
+  { path: '/mission', icon: Heart, label: 'Ми' },
+  { path: '/profile', icon: User, label: 'Простір' },
 ];
 
-export default function Layout({ children, activeTab, onTabChange }: LayoutProps) {
+export default function Layout() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const isActive = (path: string) => path === '/' ? pathname === '/' : pathname.startsWith(path);
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #FFF3E0 0%, #FFFDE7 40%, #F1F8E9 100%)' }}>
-      {/* Header */}
-      <header className="glass-nav sticky top-0 z-40 px-4 py-3 flex items-center gap-3">
-        <AppleLogo size={32} />
-        <div>
-          <h1 className="font-bold text-base leading-tight" style={{ color: '#2A2418' }}>Головний Ринок</h1>
-          <p className="text-xs" style={{ color: '#7CB342' }}>100% → ЗСУ</p>
-        </div>
-        <div className="ml-auto">
-          <span className="badge-zsu">🇺🇦 Разом</span>
-        </div>
-      </header>
+    <div style={{ minHeight: '100dvh', background: 'var(--bg-base)', paddingBottom: 'calc(68px + env(safe-area-inset-bottom))' }}>
+      <Outlet />
 
-      {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        {children}
-      </main>
-
-      {/* Bottom Navigation */}
-      <nav className="glass-nav fixed bottom-0 left-0 right-0 z-40 flex safe-bottom">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className="flex-1 flex flex-col items-center py-2 px-1 transition-all duration-200"
-            style={{
-              color: activeTab === tab.id ? '#F4801A' : 'rgba(42,36,24,0.5)',
-            }}
-          >
-            <span className="text-xl leading-none">{tab.icon}</span>
-            <span className="text-[10px] mt-1 font-medium leading-none">{tab.label}</span>
-            {activeTab === tab.id && (
-              <div className="w-4 h-0.5 mt-1 rounded-full" style={{ background: '#F4801A' }} />
-            )}
+      {/* Tab bar */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+        background: 'rgba(21,18,15,0.85)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        borderTop: '1px solid var(--glass-border)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', height: 56 }}>
+          {/* Market tab */}
+          <button onClick={() => navigate('/')} style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 2, color: isActive('/') && !isActive('/mission') && !isActive('/profile') ? 'var(--accent-orange)' : 'var(--text-tertiary)',
+            background: 'none', border: 'none', cursor: 'pointer', transition: 'color 200ms',
+          }}>
+            <ShoppingBag size={22} />
+            <span style={{ fontSize: 10, fontWeight: 500 }}>Ринок</span>
           </button>
-        ))}
-      </nav>
+
+          {/* Publish button (center, raised) */}
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <button onClick={() => navigate('/publish')} style={{
+              width: 52, height: 52, borderRadius: '50%', border: 'none', cursor: 'pointer',
+              background: 'linear-gradient(135deg, var(--accent-orange), var(--accent-yellow))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginBottom: 16, boxShadow: '0 4px 20px rgba(244,128,26,0.4)',
+              transition: 'transform 150ms',
+            }}>
+              <Plus size={26} color="#fff" strokeWidth={2.5} />
+            </button>
+          </div>
+
+          {/* Mission tab */}
+          <button onClick={() => navigate('/mission')} style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 2, color: isActive('/mission') ? 'var(--accent-orange)' : 'var(--text-tertiary)',
+            background: 'none', border: 'none', cursor: 'pointer', transition: 'color 200ms',
+          }}>
+            <Heart size={22} />
+            <span style={{ fontSize: 10, fontWeight: 500 }}>Ми</span>
+          </button>
+
+          {/* Profile tab */}
+          <button onClick={() => navigate('/profile')} style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 2, color: isActive('/profile') ? 'var(--accent-orange)' : 'var(--text-tertiary)',
+            background: 'none', border: 'none', cursor: 'pointer', transition: 'color 200ms',
+          }}>
+            <User size={22} />
+            <span style={{ fontSize: 10, fontWeight: 500 }}>Простір</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
