@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, Shield, Smartphone, Wrench, Backpack, Shirt, Home, Baby, Car, Palette, Clock, Scissors, BookOpen, GraduationCap, PenTool, Code2, HardHat, Camera, Sparkles, Languages, Scale } from 'lucide-react';
 import { useMarketStore } from '../store/useMarketStore';
@@ -27,27 +27,32 @@ const fmt = (n: number) => n.toLocaleString('uk-UA');
 
 function CountUp({ target }: { target: number }) {
   const [val, setVal] = useState(0);
-  useState(() => {
-    let start = 0;
-    const duration = 800;
+  useEffect(() => {
+    let raf: number;
     const startTime = Date.now();
+    const duration = 800;
     const tick = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      start = Math.round(progress * target);
-      setVal(start);
-      if (progress < 1) requestAnimationFrame(tick);
+      const progress = Math.min((Date.now() - startTime) / duration, 1);
+      setVal(Math.round(progress * target));
+      if (progress < 1) raf = requestAnimationFrame(tick);
     };
-    requestAnimationFrame(tick);
-  });
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
   return <>{fmt(val)}</>;
 }
 
 export default function MarketPage() {
   const navigate = useNavigate();
-  const { filters, setTab, setCategory, setSearch } = useMarketStore();
-  const filteredItems = useMarketStore(s => s.filteredItems());
-  const filteredServices = useMarketStore(s => s.filteredServices());
+  const filters = useMarketStore(s => s.filters);
+  const setTab = useMarketStore(s => s.setTab);
+  const setCategory = useMarketStore(s => s.setCategory);
+  const setSearch = useMarketStore(s => s.setSearch);
+  // Subscribe to raw data, compute filtered list with useMemo to keep stable references
+  const items = useMarketStore(s => s.items);
+  const services = useMarketStore(s => s.services);
+  const filteredItems = useMemo(() => useMarketStore.getState().filteredItems(), [items, filters]);
+  const filteredServices = useMemo(() => useMarketStore.getState().filteredServices(), [services, filters]);
   const total = useMissionStore(s => s.totalContributed());
   const txCount = useMissionStore(s => s.transactions.length);
 
