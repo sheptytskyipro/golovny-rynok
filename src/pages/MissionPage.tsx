@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Shield, Package, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { useMissionStore } from '../store/useMissionStore';
+import type { ContributionDirection } from '../types';
 
 const COLORS = ['#F4801A', '#7CB342', '#F5C518', '#6366F1'];
 const fmt = (n: number) => n.toLocaleString('uk-UA');
@@ -37,19 +38,33 @@ function CollapsibleCard({ title, children }: { title: string; children: React.R
 }
 
 export default function MissionPage() {
-  const total = useMissionStore(s => s.totalContributed());
-  const byDir = useMissionStore(s => s.byDirection());
-  const byMonth = useMissionStore(s => s.byMonth());
   const transactions = useMissionStore(s => s.transactions);
 
-  const pieData = Object.entries(byDir).map(([name, value]) => ({ name, value }));
-  const barData = byMonth.slice(-6).map(({ month, amount }) => {
+  const total = useMemo(() => transactions.reduce((sum, t) => sum + t.amount, 0), [transactions]);
+
+  const byDir = useMemo(() => {
+    const dirs: Record<ContributionDirection, number> = { 'Розробка дронів': 0, 'Гурток «Науковий»': 0, '3-тя штурмова': 0, '47-ма МАҐУРА': 0 };
+    transactions.forEach(t => { dirs[t.direction] = (dirs[t.direction] || 0) + t.amount; });
+    return dirs;
+  }, [transactions]);
+
+  const byMonth = useMemo(() => {
+    const map: Record<string, number> = {};
+    transactions.forEach(t => {
+      const month = t.createdAt.slice(0, 7);
+      map[month] = (map[month] || 0) + t.amount;
+    });
+    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([month, amount]) => ({ month, amount }));
+  }, [transactions]);
+
+  const pieData = useMemo(() => Object.entries(byDir).map(([name, value]) => ({ name, value })), [byDir]);
+  const barData = useMemo(() => byMonth.slice(-6).map(({ month, amount }) => {
     const [, m] = month.split('-');
     return { month: MONTH_NAMES[m] || m, amount };
-  });
+  }), [byMonth]);
 
-  const itemCount = transactions.filter(t => t.type === 'item').length;
-  const svcCount = transactions.filter(t => t.type === 'service').length;
+  const itemCount = useMemo(() => transactions.filter(t => t.type === 'item').length, [transactions]);
+  const svcCount = useMemo(() => transactions.filter(t => t.type === 'service').length, [transactions]);
 
   const cardStyle = { background: 'var(--glass-surface)', border: '1px solid var(--glass-border)', borderRadius: 20, padding: 16 };
 
